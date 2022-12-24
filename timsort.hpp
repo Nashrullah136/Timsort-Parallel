@@ -5,8 +5,8 @@
 #include <utility>
 
 struct run {
-    typedef std::vector<int>::iterator Iterator;
-    typedef std::vector<int>::difference_type diff_t;
+    typedef int* Iterator;
+    typedef std::ptrdiff_t diff_t;
 
     Iterator base;
     diff_t len;
@@ -16,9 +16,9 @@ struct run {
 };
 
 template<typename Compare = std::less<int>> class TimSort {
-    typedef std::vector<int>::reference ref_t;
-    typedef std::vector<int>::difference_type diff_t;
-    typedef std::vector<int>::iterator iter_t;
+    typedef int& ref_t;
+    typedef std::ptrdiff_t diff_t;
+    typedef int* iter_t;
 
     static constexpr int MIN_MERGE = 32;
     static constexpr int MIN_GALLOP = 7;

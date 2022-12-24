@@ -14,13 +14,14 @@ int calc_buffer_size(int id, int number_of_thread, int size)
     while (id % 2 == 0)
     {
         multiply *= 2;
+	id /= 2;
     }
     return size / number_of_thread * multiply;
 }
 
 void print_data(int *start, int len)
 {
-    std::cout << "---------------------------------------------------" << std::endl;
+    printf("---------------------------------------------------\n");
     for (size_t i = 0; i < len; i++)
     {
         std::cout << start[i] << std::endl;
@@ -49,23 +50,27 @@ int main(int argc, char const *argv[])
     int buffer_size = calc_buffer_size(id, number_of_threads, size);
     int *data = (int *)malloc(sizeof(int) * buffer_size);
     int data_filled = size / number_of_threads;
-    MPI_Scatter(input, size, MPI_INT, data, data_filled, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Scatter(input, data_filled, MPI_INT, data, data_filled, MPI_INT, 0, MPI_COMM_WORLD);
     if (id == 0)
     {
         print_data(data, data_filled);
     }
-    TimSort<>::sort(data, data + data_filled);
+    //TimSort<>::sort(data, data + data_filled);
     for (size_t i = 0; i < log2(number_of_threads); i++)
     {
         int modifier = int(pow(2, i + 1));
+	int diff_target = int(pow(2, i));
         if (id % modifier != 0)
         {
-            MPI_Send(data, buffer_size, MPI_INT, id - modifier, 0, MPI_COMM_WORLD);
+	    //printf("Send %d -> %d (%d)\n", id, id - diff_target, data_filled);
+            MPI_Send(data, data_filled, MPI_INT, id - diff_target, 0, MPI_COMM_WORLD);
+	    break;
         }
         else
         {
-            MPI_Recv(data + data_filled, data_filled, MPI_INT, id + modifier, 0, MPI_INT, MPI_STATUS_IGNORE);
-            TimSort<>::merge(data, data + data_filled, data + data_filled * 2);
+	    //printf("Receive %d <- %d (%d)\n", id, id + diff_target, data_filled);
+            MPI_Recv(data + data_filled, data_filled, MPI_INT, id + diff_target, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            //TimSort<>::merge(data, data + data_filled, data + data_filled * 2);
             data_filled *= 2;
             if (id == 0)
             {
@@ -73,5 +78,6 @@ int main(int argc, char const *argv[])
             }
         }
     }
+    MPI_Finalize();
     return 0;
 }

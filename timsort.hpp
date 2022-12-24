@@ -521,7 +521,7 @@ public:
             diff_t runLen = countRunAndMakeAscending(cur, hi, compare);
 
             if (runLen < minRun) {
-                diff_t const force = (std::min)(nRemaining, minRun);
+                diff_t const force = nRemaining > minRun ? minRun : nRemaining;
                 binarySort(cur, cur + force, cur + runLen, compare);
                 runLen = force;
             }

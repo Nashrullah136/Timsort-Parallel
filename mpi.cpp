@@ -19,15 +19,6 @@ int calc_buffer_size(int id, int number_of_thread, int size)
     return size / number_of_thread * multiply;
 }
 
-void print_data(int *start, int len)
-{
-    printf("---------------------------------------------------\n");
-    for (size_t i = 0; i < len; i++)
-    {
-        std::cout << start[i] << std::endl;
-    }
-}
-
 int main(int argc, char const *argv[])
 {
     MPI_Init(nullptr, nullptr);
@@ -51,32 +42,33 @@ int main(int argc, char const *argv[])
     int *data = (int *)malloc(sizeof(int) * buffer_size);
     int data_filled = size / number_of_threads;
     MPI_Scatter(input, data_filled, MPI_INT, data, data_filled, MPI_INT, 0, MPI_COMM_WORLD);
-    if (id == 0)
-    {
-        print_data(data, data_filled);
-    }
-    //TimSort<>::sort(data, data + data_filled);
+    TimSort<>::sort(data, data + data_filled);
     for (size_t i = 0; i < log2(number_of_threads); i++)
     {
         int modifier = int(pow(2, i + 1));
 	int diff_target = int(pow(2, i));
         if (id % modifier != 0)
         {
-	    //printf("Send %d -> %d (%d)\n", id, id - diff_target, data_filled);
             MPI_Send(data, data_filled, MPI_INT, id - diff_target, 0, MPI_COMM_WORLD);
 	    break;
         }
         else
         {
-	    //printf("Receive %d <- %d (%d)\n", id, id + diff_target, data_filled);
             MPI_Recv(data + data_filled, data_filled, MPI_INT, id + diff_target, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            //TimSort<>::merge(data, data + data_filled, data + data_filled * 2);
+            TimSort<>::merge(data, data + data_filled, data + data_filled * 2);
             data_filled *= 2;
-            if (id == 0)
-            {
-                print_data(data, data_filled);
-            }
         }
+    }
+    if(id == 0){
+	bool result = true;
+    	for (size_t i = 0; i < size; i++)
+    	{
+            if(i != data[i]){
+                result = false;
+            	break;
+            }
+    	}
+    	std::cout<<"OpenMP,"<<result<<std::endl;
     }
     MPI_Finalize();
     return 0;

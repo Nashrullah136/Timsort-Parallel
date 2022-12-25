@@ -2,30 +2,38 @@
 #include "vector"
 #include <filesystem>
 
-std::vector<int> readFile(std::string dir)
+int *readFile(std::string dir)
 {
     std::ifstream file(dir);
-    std::string data;
-    std::vector<int> result;
-    while (std::getline(file, data))
+    std::string input;
+    std::getline(file, input);
+    int size = std::stoi(input);
+    int *data = (int *)malloc(sizeof(int) * size);
+    int now = 0;
+    while (std::getline(file, input))
     {
-        int temp = std::stoi(data);
-        result.push_back(temp);
+        data[now++] = std::stoi(input);
     }
-    return result;
+    return data;
 }
 
-bool is_sorted(std::vector<int> data)
+int readDataCount(std::string dir)
 {
-    int size = data.size();
-    int now = 0;
-    for (auto &&i : data)
+    std::ifstream file(dir);
+    std::string input;
+    std::getline(file, input);
+    int size = std::stoi(input);
+    return size;
+}
+
+bool is_sorted(int *data, int len)
+{
+    for (int i = 0; i < len; i++)
     {
-        if (i != now)
+        if (i != data[i])
         {
             return false;
         }
-        now++;
     }
     return true;
 }

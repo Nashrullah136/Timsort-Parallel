@@ -58,14 +58,7 @@ int main(int argc, char **argv)
             TimSort<>::merge(start + id * dataPerThread, start + (id + int(pow(2, i))) * dataPerThread, start + (id + int(pow(2, i + 1))) * dataPerThread);
         }
     }
-    bool result = true;
-    for (size_t i = 0; i < size; i++)
-    {
-        if(i != data[i]){
-            result = false;
-            break;
-        }
-    }
+    bool result = is_sorted(data, size);
     std::cout<<"OpenMP,"<<result<<std::endl;
     return 0;
 }

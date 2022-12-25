@@ -3,6 +3,7 @@
 #include <mpi.h>
 #include <math.h>
 #include <timsort.hpp>
+#include <helper.hpp>
 
 int calc_buffer_size(int id, int number_of_thread, int size)
 {
@@ -14,14 +15,14 @@ int calc_buffer_size(int id, int number_of_thread, int size)
     while (id % 2 == 0)
     {
         multiply *= 2;
-	id /= 2;
+        id /= 2;
     }
     return size / number_of_thread * multiply;
 }
 
-int main(int argc, char const *argv[])
+int main(int argc, char *argv[])
 {
-    MPI_Init(nullptr, nullptr);
+    MPI_Init(&argc, &argv);
     int number_of_threads;
     MPI_Comm_size(MPI_COMM_WORLD, &number_of_threads);
     int id;
@@ -30,12 +31,13 @@ int main(int argc, char const *argv[])
     int *input = nullptr;
     if (id == 0)
     {
-        std::cin >> size;
-        input = (int *)malloc(sizeof(int) * size);
-        int i = 0;
-        while (std::cin >> input[i++])
+        if (argc < 2)
         {
+            MPI_Abort(MPI_COMM_WORLD, -1);
         }
+        std::string filename = argv[1];
+        size = readDataCount(filename);
+        input = readFile(filename);
     }
     MPI_Bcast(&size, 1, MPI_INT, 0, MPI_COMM_WORLD);
     int buffer_size = calc_buffer_size(id, number_of_threads, size);
@@ -46,11 +48,11 @@ int main(int argc, char const *argv[])
     for (size_t i = 0; i < log2(number_of_threads); i++)
     {
         int modifier = int(pow(2, i + 1));
-	int diff_target = int(pow(2, i));
+        int diff_target = int(pow(2, i));
         if (id % modifier != 0)
         {
             MPI_Send(data, data_filled, MPI_INT, id - diff_target, 0, MPI_COMM_WORLD);
-	    break;
+            break;
         }
         else
         {
@@ -59,16 +61,10 @@ int main(int argc, char const *argv[])
             data_filled *= 2;
         }
     }
-    if(id == 0){
-	bool result = true;
-    	for (size_t i = 0; i < size; i++)
-    	{
-            if(i != data[i]){
-                result = false;
-            	break;
-            }
-    	}
-    	std::cout<<"OpenMP,"<<result<<std::endl;
+    if (id == 0)
+    {
+        bool result = is_sorted(data, size);
+        std::cout << "OpenMP," << size << "," << result << std::endl;
     }
     MPI_Finalize();
     return 0;

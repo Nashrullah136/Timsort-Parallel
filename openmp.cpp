@@ -32,12 +32,13 @@
 
 int main(int argc, char **argv)
 {
-    int size;
-    std::cin>>size;
-    int data[size];
-    int i = 0;
-    while(std::cin>>data[i++]){
+    if(argc < 2){
+        std::cout<<"File directory argument needed"<<std::endl;
+        return -1;
     }
+    std::string filename = argv[1];
+    int size = readDataCount(filename);
+    int* data = readFile(filename);
     int num_of_thread = omp_get_max_threads();
     int dataPerThread = size / num_of_thread;
     bool isFinish[num_of_thread] = {};

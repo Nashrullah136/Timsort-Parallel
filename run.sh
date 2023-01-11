@@ -1,5 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 read -p 'Maximum threads: ' max_threads
+sudo apt-get install g++
+sudo apt-get install openmpi-bin openmpi-common libopenmpi-dev libgtk2.0-dev
 echo "Compile optimum_minrun.cpp"
 g++ optimum_minrun.cpp -o optimum_minrun.out -I .
 echo "Compile check_openmp.cpp"
@@ -18,8 +20,8 @@ echo "" > seq
 for f in ./test_data/*; do
     echo "-------------------$f-----------------"
     echo "./optimum_minrun.out $f"
-    # ./optimum_minrun.out "$f" >> optimum_minrun
-    # echo "mpiexec -n $max_threads ./check_mpi.out $f"
+    ./optimum_minrun.out "$f" >> optimum_minrun
+    echo "mpiexec -n $max_threads ./check_mpi.out $f"
     mpiexec -n "$max_threads" ./check_mpi.out "$f" >> check
     echo "./check_openmp.out $max_threads $f"
     ./check_openmp.out "$max_threads" "$f" >> check
@@ -30,12 +32,12 @@ for f in ./test_data/*; do
     echo "./bench_openmp.out $max_threads $f"
     ./bench_openmp.out "$max_threads" "$f" >> seq
 done
-# echo "" > par
-# for f in ./test_data/*; do
-#     for ((i = 2; i <= max_threads; i*=2)); do
-#         echo "mpiexec -n $i ./bench_mpi.out $f"
-#         mpiexec -n "$i" ./bench_mpi.out "$f" >> par
-#         echo "./bench_openmp.out $i $f"
-#         ./bench_openmp.out "$i" "$f" >> par
-#     done
-# done
+echo "" > par
+for f in ./test_data/*; do
+    for ((i = 2; i <= max_threads; i*=2)); do
+        echo "mpiexec -n $i ./bench_mpi.out $f"
+        mpiexec -n "$i" ./bench_mpi.out "$f" >> par
+        echo "./bench_openmp.out $i $f"
+        ./bench_openmp.out "$i" "$f" >> par
+    done
+done
